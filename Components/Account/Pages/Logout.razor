@@ -1,0 +1,14 @@
+@page "/Account/Logout"
+@layout AuthLayout
+@using Microsoft.AspNetCore.Identity
+@using StudySync.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        NavigationManager.NavigateTo("/Account/Login", true);
+    }
+}

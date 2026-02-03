@@ -1,0 +1,99 @@
+@page "/courses"
+@using Microsoft.AspNetCore.Authorization
+@using StudySync.Data
+@using StudySync.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CourseService CourseService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>My Courses - StudySync</PageTitle>
+
+<div class="page-header">
+    <h1>📚 My Courses</h1>
+    <a href="/courses/create" class="btn btn-primary">+ Add Course</a>
+</div>
+
+@if (isLoading)
+{
+    <div class="loading">Loading courses...</div>
+}
+else if (courses.Any())
+{
+    <div class="courses-grid">
+        @foreach (var course in courses)
+        {
+            <div class="course-card">
+                <div class="course-header">
+                    <h2>@course.Name</h2>
+                    @if (!string.IsNullOrEmpty(course.Code))
+                    {
+                        <span class="course-code">@course.Code</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(course.Description))
+                {
+                    <p class="course-description">@course.Description</p>
+                }
+
+                <div class="course-stats">
+                    <span>@course.Assignments.Count assignment@(course.Assignments.Count != 1 ? "s" : "")</span>
+                </div>
+
+                <div class="course-actions">
+                    <a href="/courses/edit/@course.Id" class="btn btn-sm btn-secondary">Edit</a>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteCourse(course.Id)">Delete</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <p>📖 You haven't added any courses yet.</p>
+        <a href="/courses/create" class="btn btn-primary">Add Your First Course</a>
+    </div>
+}
+
+@code {
+    private List<Course> courses = new();
+    private bool isLoading = true;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await LoadCourses();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadCourses()
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            courses = await CourseService.GetUserCoursesAsync(userId);
+        }
+    }
+
+    private async Task DeleteCourse(int courseId)
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var confirmed = true; // In production, use JS Interop for confirmation
+            if (confirmed)
+            {
+                await CourseService.DeleteCourseAsync(courseId, userId);
+                await LoadCourses();
+            }
+        }
+    }
+}

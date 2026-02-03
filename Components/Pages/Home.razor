@@ -1,0 +1,284 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using StudySync.Data
+@using StudySync.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AssignmentService AssignmentService
+@inject CourseService CourseService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard - StudySync</PageTitle>
+
+<div class="dashboard">
+    <div class="welcome-section">
+        <h1>Welcome back, @userName! 👋</h1>
+        <p class="subtitle">Here's what's coming up</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading your dashboard...</div>
+    }
+    else
+    {
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number">@totalCourses</div>
+                <div class="stat-label">Active Courses</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number">@dueSoonCount</div>
+                <div class="stat-label">Due Soon (3 days)</div>
+            </div>
+            <div class="stat-card urgent">
+                <div class="stat-number">@overdueCount</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="dashboard-filters">
+            <button class="filter-tab @(selectedView == "upcoming" ? "active" : "")"
+                @onclick='() => ChangeView("upcoming")'>
+                📅 Upcoming (7 days)
+            </button>
+            <button class="filter-tab @(selectedView == "duesoon" ? "active" : "")" @onclick='() => ChangeView("duesoon")'>
+                ⚡ Due Soon (3 days)
+            </button>
+            <button class="filter-tab @(selectedView == "overdue" ? "active" : "")" @onclick='() => ChangeView("overdue")'>
+                ⚠️ Overdue
+            </button>
+        </div>
+
+        <!-- Course Filter -->
+        @if (courses.Any())
+        {
+            <div class="course-filter">
+                <label>Filter by Course:</label>
+                <select @bind="selectedCourseId" @bind:after="FilterByCourse" class="form-control">
+                    <option value="0">All Courses</option>
+                    @foreach (var course in courses)
+                    {
+                        <option value="@course.Id">@course.Name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        <div class="upcoming-section">
+            <div class="section-header">
+                <h2>@GetViewTitle()</h2>
+                <a href="/assignments" class="btn btn-link">View All</a>
+            </div>
+
+            @if (displayedAssignments.Any())
+            {
+                <div class="assignments-list">
+                    @foreach (var assignment in displayedAssignments)
+                    {
+                        var isOverdue = assignment.DueDate.Date < DateTime.UtcNow.Date;
+                        var daysUntilDue = (assignment.DueDate.Date - DateTime.UtcNow.Date).Days;
+
+                        <div class="assignment-card @(isOverdue ? "overdue" : "")" @key="assignment.Id">
+                            <div class="assignment-info">
+                                <h3>@assignment.Title</h3>
+                                <p class="course-name">@assignment.Course?.Name</p>
+                                <div class="assignment-meta">
+                                    <span class="due-date">
+                                        @if (isOverdue)
+                                        {
+                                            <span class="overdue-badge">⚠️ @Math.Abs(daysUntilDue) day@(Math.Abs(daysUntilDue) != 1 ?
+                                                                                "s" : "") overdue</span>
+                                        }
+                                        else if (daysUntilDue == 0)
+                                        {
+                                            <span class="today-badge">📌 Due Today</span>
+                                        }
+                                        else if (daysUntilDue <= 3)
+                                        {
+                                            <span class="urgent-badge">⚡ Due in @daysUntilDue day@(daysUntilDue != 1 ? "s" : "")</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Due in @daysUntilDue day@(daysUntilDue != 1 ? "s" : "")</span>
+                                        }
+                                        - @assignment.DueDate.ToString("MMM dd, yyyy")
+                                    </span>
+                                    <span class="priority priority-@assignment.Priority.ToString().ToLower()">
+                                        @assignment.Priority Priority
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="assignment-actions">
+                                <button class="btn btn-sm btn-success"
+                                    @onclick="async () => await MarkCompleteOptimized(assignment.Id)" disabled="@isProcessing">
+                                    ✓ Complete
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    @if (selectedView == "overdue")
+                    {
+                        <p>🎉 No overdue assignments! Great job staying on track.</p>
+                    }
+                    else if (selectedView == "duesoon")
+                    {
+                        <p>✨ Nothing due in the next 3 days. Time to relax!</p>
+                    }
+                    else
+                    {
+                        <p>🎉 No upcoming assignments! You're all caught up.</p>
+                    }
+                    <a href="/assignments/create" class="btn btn-primary">Add New Assignment</a>
+                </div>
+            }
+        </div>
+
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <a href="/courses/create" class="action-btn">
+                    <span class="icon">➕</span>
+                    <span>Add Course</span>
+                </a>
+                <a href="/assignments/create" class="action-btn">
+                    <span class="icon">📝</span>
+                    <span>Add Assignment</span>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string userName = "";
+    private bool isLoading = true;
+    private bool isProcessing = false;
+
+    private List<Assignment> upcomingAssignments = new();
+    private List<Assignment> dueSoonAssignments = new();
+    private List<Assignment> overdueAssignments = new();
+    private List<Assignment> displayedAssignments = new();
+    private List<Course> courses = new();
+
+    private int totalCourses = 0;
+    private int dueSoonCount = 0;
+    private int overdueCount = 0;
+
+    private string selectedView = "upcoming";
+    private int selectedCourseId = 0;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        userName = user.Identity?.Name?.Split('@')[0] ?? "Student";
+        userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await LoadAllData();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadAllData()
+    {
+        if (string.IsNullOrEmpty(userId)) return;
+
+        // Load all data sequentially to avoid DbContext concurrency issues
+        upcomingAssignments = await AssignmentService.GetUpcomingAssignmentsAsync(userId, 7);
+        dueSoonAssignments = await AssignmentService.GetDueSoonAssignmentsAsync(userId, 3);
+        overdueAssignments = await AssignmentService.GetOverdueAssignmentsAsync(userId);
+        courses = await CourseService.GetUserCoursesAsync(userId);
+
+        totalCourses = courses.Count;
+        dueSoonCount = dueSoonAssignments.Count;
+        overdueCount = overdueAssignments.Count;
+
+        UpdateDisplayedAssignments();
+    }
+
+    private void UpdateDisplayedAssignments()
+    {
+        var sourceList = selectedView switch
+        {
+            "duesoon" => dueSoonAssignments,
+            "overdue" => overdueAssignments,
+            _ => upcomingAssignments
+        };
+
+        if (selectedCourseId > 0)
+        {
+            displayedAssignments = sourceList.Where(a => a.CourseId == selectedCourseId).ToList();
+        }
+        else
+        {
+            displayedAssignments = sourceList;
+        }
+    }
+
+    private void ChangeView(string view)
+    {
+        selectedView = view;
+        UpdateDisplayedAssignments();
+    }
+
+    private void FilterByCourse()
+    {
+        UpdateDisplayedAssignments();
+    }
+
+    private string GetViewTitle()
+    {
+        return selectedView switch
+        {
+            "duesoon" => "⚡ Due Soon (Next 3 Days)",
+            "overdue" => "⚠️ Overdue Assignments",
+            _ => "📅 Upcoming Deadlines (Next 7 Days)"
+        };
+    }
+
+    // Optimized mark complete - no full page reload
+    private async Task MarkCompleteOptimized(int assignmentId)
+    {
+        if (string.IsNullOrEmpty(userId) || isProcessing) return;
+
+        isProcessing = true;
+        try
+        {
+            // Update database
+            await AssignmentService.MarkAsCompleteAsync(assignmentId, userId);
+
+            // Update UI locally without reloading all data
+            RemoveAssignmentFromLists(assignmentId);
+            UpdateDisplayedAssignments();
+
+            // Update counters
+            dueSoonCount = dueSoonAssignments.Count;
+            overdueCount = overdueAssignments.Count;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void RemoveAssignmentFromLists(int assignmentId)
+    {
+        upcomingAssignments.RemoveAll(a => a.Id == assignmentId);
+        dueSoonAssignments.RemoveAll(a => a.Id == assignmentId);
+        overdueAssignments.RemoveAll(a => a.Id == assignmentId);
+    }
+}

@@ -1,0 +1,149 @@
+@page "/assignments"
+@using Microsoft.AspNetCore.Authorization
+@using StudySync.Data
+@using StudySync.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AssignmentService AssignmentService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Assignments - StudySync</PageTitle>
+
+<div class="page-header">
+    <h1>📝 All Assignments</h1>
+    <a href="/assignments/create" class="btn btn-primary">+ Add Assignment</a>
+</div>
+
+<div class="filter-bar">
+    <button class="filter-btn @(selectedFilter == "all" ? "active" : "")"
+        @onclick='() => FilterAssignments("all")'>All</button>
+    <button class="filter-btn @(selectedFilter == "todo" ? "active" : "")" @onclick='() => FilterAssignments("todo")'>To
+        Do</button>
+    <button class="filter-btn @(selectedFilter == "inprogress" ? "active" : "")"
+        @onclick='() => FilterAssignments("inprogress")'>In Progress</button>
+    <button class="filter-btn @(selectedFilter == "done" ? "active" : "")"
+        @onclick='() => FilterAssignments("done")'>Done</button>
+</div>
+
+@if (isLoading)
+{
+    <div class="loading">Loading assignments...</div>
+}
+else if (filteredAssignments.Any())
+{
+    <div class="assignments-container">
+        @foreach (var assignment in filteredAssignments)
+        {
+            var isOverdue = assignment.DueDate.Date < DateTime.UtcNow.Date && assignment.Status != AssignmentStatus.Done;
+
+            <div class="assignment-item @(isOverdue ? "overdue" : "") status-@assignment.Status.ToString().ToLower()">
+                <div class="assignment-content">
+                    <div class="assignment-main">
+                        <h3>@assignment.Title</h3>
+                        <p class="assignment-course">@assignment.Course?.Name</p>
+
+                        @if (!string.IsNullOrEmpty(assignment.Description))
+                        {
+                            <p class="assignment-description">@assignment.Description</p>
+                        }
+
+                        <div class="assignment-details">
+                            <span class="due-info">
+                                <strong>Due:</strong> @assignment.DueDate.ToString("MMM dd, yyyy")
+                                @if (isOverdue)
+                                {
+                                    <span class="overdue-text">⚠️ Overdue</span>
+                                }
+                            </span>
+                            <span class="badge priority-@assignment.Priority.ToString().ToLower()">
+                                @assignment.Priority
+                            </span>
+                            <span class="badge status-badge">
+                                @assignment.Status
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="assignment-actions-vertical">
+                        @if (assignment.Status != AssignmentStatus.Done)
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => MarkComplete(assignment.Id)">
+                                ✓ Complete
+                            </button>
+                        }
+                        <a href="/assignments/edit/@assignment.Id" class="btn btn-sm btn-secondary">Edit</a>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteAssignment(assignment.Id)">Delete</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <p>📋 No assignments found.</p>
+        <a href="/assignments/create" class="btn btn-primary">Add Your First Assignment</a>
+    </div>
+}
+
+@code {
+    private List<Assignment> assignments = new();
+    private List<Assignment> filteredAssignments = new();
+    private bool isLoading = true;
+    private string? userId;
+    private string selectedFilter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await LoadAssignments();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task LoadAssignments()
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            assignments = await AssignmentService.GetUserAssignmentsAsync(userId);
+            FilterAssignments(selectedFilter);
+        }
+    }
+
+    private void FilterAssignments(string filter)
+    {
+        selectedFilter = filter;
+        filteredAssignments = filter switch
+        {
+            "todo" => assignments.Where(a => a.Status == AssignmentStatus.ToDo).ToList(),
+            "inprogress" => assignments.Where(a => a.Status == AssignmentStatus.InProgress).ToList(),
+            "done" => assignments.Where(a => a.Status == AssignmentStatus.Done).ToList(),
+            _ => assignments
+        };
+    }
+
+    private async Task MarkComplete(int assignmentId)
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AssignmentService.MarkAsCompleteAsync(assignmentId, userId);
+            await LoadAssignments();
+        }
+    }
+
+    private async Task DeleteAssignment(int assignmentId)
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AssignmentService.DeleteAssignmentAsync(assignmentId, userId);
+            await LoadAssignments();
+        }
+    }
+}
