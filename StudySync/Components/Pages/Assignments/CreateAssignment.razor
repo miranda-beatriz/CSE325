@@ -1,0 +1,121 @@
+@page "/assignments/create"
+@using Microsoft.AspNetCore.Authorization
+@using StudySync.Data
+@using StudySync.Services
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AssignmentService AssignmentService
+@inject CourseService CourseService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Add Assignment - StudySync</PageTitle>
+
+<div class="page-header">
+    <h1>➕ Add New Assignment</h1>
+</div>
+
+@if (courses.Count == 0)
+{
+    <div class="alert alert-warning">
+        <p>⚠️ You need to create at least one course before adding assignments.</p>
+        <a href="/courses/create" class="btn btn-primary">Create Course</a>
+    </div>
+}
+else
+{
+    <div class="form-container">
+        <EditForm Model="@assignment" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="form-group">
+                <label for="title">Assignment Title *</label>
+                <InputText id="title" @bind-Value="assignment.Title" class="form-control"
+                    placeholder="e.g., Homework Chapter 5" />
+                <ValidationMessage For="@(() => assignment.Title)" />
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <InputTextArea id="description" @bind-Value="assignment.Description" class="form-control" rows="4"
+                    placeholder="Optional details about the assignment..." />
+                <ValidationMessage For="@(() => assignment.Description)" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="course">Course *</label>
+                    <InputSelect id="course" @bind-Value="assignment.CourseId" class="form-control">
+                        <option value="0">Select a course...</option>
+                        @foreach (var course in courses)
+                        {
+                            <option value="@course.Id">@course.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => assignment.CourseId)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="duedate">Due Date *</label>
+                    <InputDate id="duedate" @bind-Value="assignment.DueDate" class="form-control" />
+                    <ValidationMessage For="@(() => assignment.DueDate)" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <InputSelect id="priority" @bind-Value="assignment.Priority" class="form-control">
+                        <option value="@AssignmentPriority.Low">Low</option>
+                        <option value="@AssignmentPriority.Medium">Medium</option>
+                        <option value="@AssignmentPriority.High">High</option>
+                    </InputSelect>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <InputSelect id="status" @bind-Value="assignment.Status" class="form-control">
+                        <option value="@AssignmentStatus.ToDo">To Do</option>
+                        <option value="@AssignmentStatus.InProgress">In Progress</option>
+                        <option value="@AssignmentStatus.Done">Done</option>
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Assignment</button>
+                <a href="/assignments" class="btn btn-secondary">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private Assignment assignment = new() { DueDate = DateTime.UtcNow.AddDays(7) };
+    private List<Course> courses = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            courses = await CourseService.GetUserCoursesAsync(userId);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            assignment.UserId = userId;
+            await AssignmentService.CreateAssignmentAsync(assignment);
+            NavigationManager.NavigateTo("/assignments");
+        }
+    }
+}

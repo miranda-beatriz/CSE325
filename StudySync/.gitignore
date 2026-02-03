@@ -1,0 +1,25 @@
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+*.pubxml
+*.mdf
+*.ldf
+*.ndf
+Migrations/
+*.db
+*.db-shm
+*.db-wal
+publish/
+*.zip
+
+# Sensitive files - DO NOT COMMIT
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
