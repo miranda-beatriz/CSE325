@@ -240,7 +240,7 @@ dotnet ef database update
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Server=tcp:yourserver.database.windows.net,1433;Database=StudySync;User ID=youradmin;Password=yourpassword;Encrypt=true;Connection Timeout=30;"
+       "DefaultConnection": "Server=tcp:server.database.windows.net,1433;Database=StudySync;User ID=youradmin;Password=yourpassword;Encrypt=true;Connection Timeout=30;"
      }
    }
    ```
