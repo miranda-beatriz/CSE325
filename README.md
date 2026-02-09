@@ -2,6 +2,40 @@
 
 A web application designed to help university students organize their academic life efficiently.
 
+## 🚀 Quick Start (First Time Setup)
+
+**Important:** The database is not included in this repository. Follow these steps:
+
+1. **Clone and restore**
+
+   ```powershell
+   git clone https://github.com/YOUR-USERNAME/StudySync.git
+   cd StudySync
+   dotnet restore
+   ```
+
+2. **Create database**
+
+   ```powershell
+   dotnet ef database update
+   ```
+
+3. **Run application**
+
+   ```powershell
+   dotnet run
+   ```
+
+4. **Create your account**
+   - Open browser at `http://localhost:5000`
+   - Click **"Register"**
+   - Use any email (e.g., `student@example.com`)
+   - Password must have: 6+ chars, uppercase, lowercase, digit (e.g., `Password123`)
+
+**There is no default username/password. You must register first!**
+
+---
+
 ## Features
 
 - 🔐 **User Authentication** - Secure sign up and login with ASP.NET Identity
@@ -40,37 +74,63 @@ A web application designed to help university students organize their academic l
 
 ### Installation
 
-1. Clone the repository
-2. Navigate to the project folder
-3. Update connection string in `appsettings.json` if needed (default uses LocalDB)
-4. Create the database:
+1. **Clone the repository**
+
    ```powershell
-   dotnet ef migrations add InitialCreate
+   git clone https://github.com/YOUR-USERNAME/StudySync.git
+   cd StudySync
+   ```
+
+2. **Restore packages**
+
+   ```powershell
+   dotnet restore
+   ```
+
+3. **Create the database**
+
+   ```powershell
    dotnet ef database update
    ```
-5. Run the application:
+
+   This will create a `StudySync.db` SQLite database in the project folder.
+
+4. **Run the application**
+
    ```powershell
    dotnet run
    ```
-6. Navigate to `http://localhost:5000` in your browser
+
+5. **First Time Setup - Create Your Account**
+   - Navigate to `http://localhost:5000` in your browser
+   - Click on **"Register"** (top right or link at bottom of login page)
+   - Create your account with:
+     - Email: any valid email format (e.g., `student@example.com`)
+     - Password: minimum 6 characters with uppercase, lowercase, and digit (e.g., `Password123`)
+   - After registration, you'll be automatically logged in!
+
+> **Note:** The database is NOT included in the repository. Each developer needs to create their own local database using the commands above.
 
 ## Database Setup
 
-The application uses SQL Server with Entity Framework Core migrations.
+The application uses **SQLite** for local development (no SQL Server installation needed).
 
-To create the database:
+**Creating the database for the first time:**
 
 ```powershell
-dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-To reset the database:
+This creates `StudySync.db` in your project folder.
+
+**If you need to reset the database:**
 
 ```powershell
 dotnet ef database drop
 dotnet ef database update
 ```
+
+> ⚠️ **Note:** After resetting, you'll need to register again as all users are deleted.
 
 ## Deployment to Azure
 
