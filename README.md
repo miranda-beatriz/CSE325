@@ -61,7 +61,7 @@ A web application designed to help university students organize their academic l
 ## Technologies
 
 - **Framework**: Blazor Server (.NET 8)
-- **Database**: SQL Server (Azure-ready)
+- **Database**: SQLite (local development), Azure SQL (production)
 - **Authentication**: ASP.NET Core Identity
 - **ORM**: Entity Framework Core
 
@@ -70,7 +70,7 @@ A web application designed to help university students organize their academic l
 ### Prerequisites
 
 - .NET 8 SDK
-- SQL Server (LocalDB for development, or Azure SQL for production)
+- No database installation needed (uses SQLite for local development)
 
 ### Installation
 
