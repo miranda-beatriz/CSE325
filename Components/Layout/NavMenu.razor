@@ -1,12 +1,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">StudySync</a>
-    </div>
+<div class="sidebar-header">
+    <a class="brand-link" href="">📚 StudySync</a>
 </div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable">
     <nav class="flex-column">
@@ -14,26 +10,26 @@
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+                        <span class="nav-icon">📊</span> Dashboard
                     </NavLink>
                 </div>
 
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="courses">
-                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> My Courses
+                        <span class="nav-icon">📖</span> My Courses
                     </NavLink>
                 </div>
 
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="assignments">
-                        <span class="bi bi-list-task-nav-menu" aria-hidden="true"></span> Assignments
+                        <span class="nav-icon">✏️</span> Assignments
                     </NavLink>
                 </div>
             </Authorized>
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                        <span class="nav-icon">🔐</span> Login
                     </NavLink>
                 </div>
             </NotAuthorized>

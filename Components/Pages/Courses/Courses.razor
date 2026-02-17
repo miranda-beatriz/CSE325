@@ -10,6 +10,8 @@
 
 <PageTitle>My Courses - StudySync</PageTitle>
 
+<Toast Message="@toastMessage" Type="@toastType" IsVisible="@showToast" OnClose="@(() => showToast = false)" />
+
 <div class="page-header">
     <h1>📚 My Courses</h1>
     <a href="/courses/create" class="btn btn-primary">+ Add Course</a>
@@ -62,6 +64,9 @@ else
     private List<Course> courses = new();
     private bool isLoading = true;
     private string? userId;
+    private bool showToast = false;
+    private string toastMessage = "";
+    private string toastType = "Success";
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,7 +98,16 @@ else
             {
                 await CourseService.DeleteCourseAsync(courseId, userId);
                 await LoadCourses();
+                ShowToast("Course deleted successfully", "Success");
             }
         }
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toastMessage = message;
+        toastType = type;
+        showToast = true;
+        StateHasChanged();
     }
 }

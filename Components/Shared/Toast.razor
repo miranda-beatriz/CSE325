@@ -1,0 +1,56 @@
+@if (IsVisible)
+{
+    <div class="modal-overlay" @onclick="Hide">
+        <div class="notification-modal notification-@Type.ToLower()" @onclick:stopPropagation="true">
+            <div class="notification-icon">
+                @if (Type == "Success")
+                {
+                    <span>✓</span>
+                }
+                else if (Type == "Error")
+                {
+                    <span>✕</span>
+                }
+                else
+                {
+                    <span>⚠</span>
+                }
+            </div>
+            <div class="notification-message">@Message</div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string Type { get; set; } = "Info"; // Success, Error, Warning, Info
+    [Parameter] public bool IsVisible { get; set; } = false;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool _previousVisibility = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !_previousVisibility)
+        {
+            _previousVisibility = true;
+            await Task.Delay(4000);
+            if (IsVisible) // Check if still visible before hiding
+            {
+                await Hide();
+            }
+        }
+        else if (!IsVisible)
+        {
+            _previousVisibility = false;
+        }
+    }
+
+    private async Task Hide()
+    {
+        IsVisible = false;
+        _previousVisibility = false;
+        await OnClose.InvokeAsync();
+        StateHasChanged();
+    }
+}

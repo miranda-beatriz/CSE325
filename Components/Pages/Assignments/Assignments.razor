@@ -10,6 +10,8 @@
 
 <PageTitle>Assignments - StudySync</PageTitle>
 
+<Toast Message="@toastMessage" Type="@toastType" IsVisible="@showToast" OnClose="@(() => showToast = false)" />
+
 <div class="page-header">
     <h1>📝 All Assignments</h1>
     <a href="/assignments/create" class="btn btn-primary">+ Add Assignment</a>
@@ -94,6 +96,9 @@ else
     private bool isLoading = true;
     private string? userId;
     private string selectedFilter = "all";
+    private bool showToast = false;
+    private string toastMessage = "";
+    private string toastType = "Success";
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +140,7 @@ else
         {
             await AssignmentService.MarkAsCompleteAsync(assignmentId, userId);
             await LoadAssignments();
+            ShowToast("Assignment marked as complete!", "Success");
         }
     }
 
@@ -144,6 +150,15 @@ else
         {
             await AssignmentService.DeleteAssignmentAsync(assignmentId, userId);
             await LoadAssignments();
+            ShowToast("Assignment deleted successfully", "Success");
         }
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toastMessage = message;
+        toastType = type;
+        showToast = true;
+        StateHasChanged();
     }
 }

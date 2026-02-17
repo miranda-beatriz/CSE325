@@ -10,12 +10,14 @@
         <div class="top-row px-4">
             <AuthorizeView>
                 <Authorized>
-                    <span class="user-info">👤 @context.User.Identity?.Name</span>
-                    <a href="Account/Logout" class="btn btn-link">Logout</a>
+                    <div class="user-welcome">
+                        <span class="user-info">👤 @context.User.Identity?.Name</span>
+                    </div>
+                    <a href="Account/Logout" class="btn btn-link logout-btn">🚪 Logout</a>
                 </Authorized>
                 <NotAuthorized>
-                    <a href="Account/Register">Register</a>
-                    <a href="Account/Login">Login</a>
+                    <a href="Account/Register" class="btn btn-link">Register</a>
+                    <a href="Account/Login" class="btn btn-primary">Login</a>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
