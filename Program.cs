@@ -64,4 +64,36 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+// Ensure database is created and apply simple seeding (creates a test admin user)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        // Create DB if it doesn't exist
+        context.Database.EnsureCreated();
+
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var adminEmail = "admin@studysync.local";
+        var adminUser = userManager.FindByEmailAsync(adminEmail).GetAwaiter().GetResult();
+        if (adminUser == null)
+        {
+            var newAdmin = new ApplicationUser
+            {
+                UserName = "admin",
+                Email = adminEmail,
+                EmailConfirmed = true
+            };
+            // default test password: Admin123 (meets configured requirements)
+            var result = userManager.CreateAsync(newAdmin, "Admin123").GetAwaiter().GetResult();
+        }
+    }
+    catch (Exception ex)
+    {
+        // If seeding fails, write to console -- app can still start to allow debugging
+        Console.WriteLine($"Database ensure/seed failed: {ex}");
+    }
+}
+
 app.Run();
