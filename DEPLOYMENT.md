@@ -1,11 +1,28 @@
-# StudySync - Azure Deployment Guide
+# StudySync - Azure Deployment Guide (Optional Reference)
+
+> **Important:** This project was developed with **SQLite only** to avoid Azure costs. This deployment guide is provided as **optional reference material** for future cloud deployment. The application currently runs 100% locally with no Azure services.
+>
+> **For local development (current setup):** See the "Local deployment (SQLite)" section below or refer to [README.md](README.md).
 
 ## Prerequisites
 
-- Azure account with active subscription
 - .NET 8 SDK installed
-- Azure CLI (optional, for command-line deployment)
-- Visual Studio or VS Code with Azure extensions (recommended)
+
+## Local deployment (SQLite)
+
+If you are using SQLite for development or testing, follow these quick steps:
+
+1. Ensure the .NET 8 SDK is installed.
+2. From the project folder run:
+
+```powershell
+dotnet ef database update
+dotnet run
+```
+
+This will create a `StudySync.db` file in the project folder and start the application in development mode using the SQLite connection defined in `appsettings.json`.
+
+If you need more advanced guidance (migrations, backups, or production deployment), ask and I'll expand this section.
 
 ## Step 1: Create Azure SQL Database
 
