@@ -9,8 +9,8 @@ A web application designed to help university students organize their academic l
 1. **Clone and restore**
 
    ```powershell
-   git clone https://github.com/YOUR-USERNAME/StudySync.git
-   cd StudySync
+   git clone https://github.com/miranda-beatriz/CSE325.git
+   cd CSE325
    dotnet restore
    ```
 
@@ -61,7 +61,7 @@ A web application designed to help university students organize their academic l
 ## Technologies
 
 - **Framework**: Blazor Server (.NET 8)
-- **Database**: SQLite (local development), Azure SQL (production)
+- **Database**: SQLite (local database file - no cloud services required)
 - **Authentication**: ASP.NET Core Identity
 - **ORM**: Entity Framework Core
 
@@ -69,16 +69,16 @@ A web application designed to help university students organize their academic l
 
 ### Prerequisites
 
-- .NET 8 SDK
-- No database installation needed (uses SQLite for local development)
+- .NET 8 SDK only
+- No database installation needed - SQLite is file-based and included with .NET
 
 ### Installation
 
 1. **Clone the repository**
 
    ```powershell
-   git clone https://github.com/YOUR-USERNAME/StudySync.git
-   cd StudySync
+   git clone https://github.com/miranda-beatriz/CSE325.git
+   cd CSE325
    ```
 
 2. **Restore packages**
@@ -87,7 +87,7 @@ A web application designed to help university students organize their academic l
    dotnet restore
    ```
 
-3. **Create the database**
+3. **Create the database (local SQLite)**
 
    ```powershell
    dotnet ef database update
@@ -132,22 +132,69 @@ dotnet ef database update
 
 > ⚠️ **Note:** After resetting, you'll need to register again as all users are deleted.
 
-## Deployment to Azure
+## Troubleshooting
 
-1. Create an Azure SQL Database
-2. Update the connection string in `appsettings.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=tcp:yourserver.database.windows.net,1433;Database=StudySync;..."
-     }
-   }
-   ```
-3. Run migrations against Azure SQL:
-   ```powershell
-   dotnet ef database update
-   ```
+### Application won't start
+
+```powershell
+dotnet build
+```
+
+Check for compilation errors. If successful, try:
+
+```powershell
+dotnet clean
+dotnet restore
+dotnet run
+```
+
+### Database errors
+
+If you see "no such table" or migration errors:
+
+```powershell
+dotnet ef database drop
+dotnet ef database update
+```
+
+### Port already in use
+
+If port 5000 is busy, specify a different port:
+
+```powershell
+dotnet run --urls "http://localhost:5001"
+```
+
+Or edit `Properties/launchSettings.json` to change the default port.
+
+### EF Core tools not found
+
+Install Entity Framework Core tools:
+
+```powershell
+dotnet tool install --global dotnet-ef
+```
+
+Or update if already installed:
+
+```powershell
+dotnet tool update --global dotnet-ef
+```
+
+## Deployment to Azure (Optional - Not Implemented)
+
+> **Note:** This project currently uses **SQLite only** to avoid Azure costs. The Azure deployment steps below are provided for reference if you want to deploy to cloud infrastructure in the future.
+
+To deploy to Azure with Azure SQL Database:
+
+1. Create an Azure SQL Database (requires Azure subscription with billing)
+2. Update `appsettings.json` with Azure SQL connection string
+3. Run migrations against Azure SQL
 4. Deploy to Azure App Service
+
+**For detailed Azure deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+
+**Current setup:** The application runs entirely locally with SQLite - no cloud services or costs required.
 
 ## Project Structure
 
@@ -169,6 +216,23 @@ dotnet ef database update
 
 University students who need a straightforward way to track courses and tasks without the complexity of a full Learning Management System (LMS).
 
+## Additional Resources
+
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete Azure deployment guide
+- **[GUIDE.md](GUIDE.md)** - Detailed feature guide and usage instructions
+- [ASP.NET Core Blazor Documentation](https://learn.microsoft.com/aspnet/core/blazor/)
+- [Entity Framework Core Documentation](https://learn.microsoft.com/ef/core/)
+
+## Contributing
+
+This is an educational project. If you want to extend it:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add YourFeature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
 ## License
 
-This project is for educational purposes.
+This project is for educational purposes as part of CSE 325 - February 2026.

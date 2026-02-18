@@ -226,11 +226,13 @@ dotnet ef database update
 - Change port in `launchSettings.json`
 - Or use: `dotnet run --urls "http://localhost:5001"`
 
-## 🚀 Deployment to Azure
+## 🚀 Deployment to Azure (Optional - Not Currently Used)
+
+> **Note:** This project uses SQLite locally and does not require Azure. This section is for reference only.
 
 ### Prerequisites
 
-- Azure account
+- Azure account (with active subscription and billing)
 - Azure SQL Database created
 
 ### Steps
@@ -275,7 +277,7 @@ dotnet ef database update
 ✅ **CRUD Functionality**: Full CRUD for Courses and Assignments  
 ✅ **Application Design Standards**: DataAnnotations validation, proper error handling  
 ✅ **Branding**: Consistent color palette, cohesive UI design  
-✅ **Database**: SQL Server with EF Core, proper relationships  
+✅ **Database**: SQLite with EF Core, proper relationships (no cloud/server required)  
 ✅ **Security**: Hashed passwords, user-specific data isolation  
 ✅ **Usability**: Due Soon filter (< 3 days), Course filtering, clear visual indicators  
 ✅ **Performance**: Optimized check-off (no reload), parallel data loading, efficient queries
@@ -292,4 +294,4 @@ For questions or issues:
 ---
 
 **Project created for CSE 325 - February 2026**  
-**Designed for deployment on Microsoft Azure**
+**Built with SQLite for local development (no cloud costs)**
